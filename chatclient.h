@@ -1,12 +1,12 @@
 /*******************************************************************************
-* File:         chat.h
+* File:         chatclient.h
 * Author:       Shawn S Hillyer
 * Date:         July 11, 2016
 * Course:       OSU CSS 372: Project 1
 *
 * Description:  Include headers, constants, & common functions for chat client
 *               
-* Usage:        #include <"chat.h">
+* Usage:        #include <"chatclient.h">
 *               
 * Cite:         Overall flow of a socket-based client/server pair of programs: 
                 beej.us/guide/bgipc/output/html/multipage/unixsock.html  
