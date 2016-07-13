@@ -40,6 +40,7 @@ int main(int argc, char const *argv[]) {
 	int port = convert_string_to_int(argv[2]);
 	validate_port(port, errno);
 	const char * port_str = argv[2];
+	const char * hostname = argv[1];
 
 	// Variables for sockets and the server address
 	int sfd, status; 
@@ -54,7 +55,7 @@ int main(int argc, char const *argv[]) {
 	hints.ai_flags = AI_PASSIVE; // fill in localhost ip
 
 	// populate servinfo using the hints struct
-	if ( (status = getaddrinfo(NULL, port_str, &hints, &servinfo)) != 0) {
+	if ( (status = getaddrinfo(hostname, port_str, &hints, &servinfo)) != 0) {
 		perror_exit("getaddrinfo", EXIT_FAILURE);
 	}
 
@@ -72,13 +73,17 @@ int main(int argc, char const *argv[]) {
 		exit(2);
 	}
 
-	message_length = 
+	while (1) {
+		long message_length = strlen(message);
 
-	// Send Message
-	safe_transmit_msg_on_socket(sfd, message, message_length, 2);
+		// Send Message
+		safe_transmit_msg_on_socket(sfd, message, message_length, 2);
 
-	// Receive response from the server and print to screen.
-	safe_transmit_msg_on_socket(sfd, resp, message_length, 1);
+		// Receive response from the server and print to screen.
+		safe_transmit_msg_on_socket(sfd, resp, message_length, 1);
+		
+	}
+
 
 	// Free the dynamic allocated memory we used
 	free(servinfo);
