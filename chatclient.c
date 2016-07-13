@@ -17,7 +17,10 @@
 * Usage:        chatclient hostname port
 *               
 * Cite:         Overall flow of a socket-based client/server pair of programs: 
-                beej.us/guide/bgipc/output/html/multipage/unixsock.html  
+*               beej.us/guide/bgipc/output/html/multipage/unixsock.html  
+*
+* Note:         Portions of this program were re-used from assignment 4 that I
+*               completed in CS 372.
 *******************************************************************************/
 
 #include "chatclient.h"
@@ -28,24 +31,28 @@
 * Connects to a server and sends message
 *******************************************************************************/
 int main(int argc, char const *argv[]) {
+	// allocate space to hold messages and various strings
+	char message[BUF_SIZE];
+	char resp[BUF_SIZE]; // might not really need this but it's "safer"
+	const char * port_str = argv[2]; // the port as a string. TODO:  convert this from the port variable using int to string method?
+	const char * hostname = argv[1]; // ex: localhost
+	const char * client_handle;
 	
+
 	// Verify Arguments are valid
 	check_argument_count(argc, 3, "Usage: chatclient hostname port\n");
 
-	// allocate space to hold messages
-	char message[BUF_SIZE];
-	char resp[BUF_SIZE]; // might not really need this but it's "safer"
 
 	// Parse and validate port, save port as a string for loading address
 	int port = convert_string_to_int(argv[2]);
 	validate_port(port, errno);
-	const char * port_str = argv[2];
-	const char * hostname = argv[1];
+
 
 	// Variables for sockets and the server address
 	int sfd, status; 
 	struct addrinfo hints, *servinfo;
-
+	
+	
 	// 0 out hints struct then init to connect to hostname via TCP
 	// Cite: lecture slides, man getaddrinfo(3), and beej guide - random bits
 	// Use the getaddrinfo() to fill out servinfo by passing in some 'hints'
@@ -69,9 +76,16 @@ int main(int argc, char const *argv[]) {
 
 	// Connect to server indicated by servinfo.ai_addr
 	if(connect(sfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-		fprintf(stderr, "chatclient: Could not contact chatserver on port %d\n", port);
+		fprintf(stderr, "chatclient: Could not contact chatserver process at %s:%d\n", hostname, port);
 		exit(2);
 	}
+
+
+	// Prompt user for a handle. Truncates anything in excess of 10 characters, strips newline
+	client_handle = prompt_user_for_handle();
+	int client_handle_length = strlen(client_handle);
+	// printf("%s>", client_handle);
+	// printf("\nDEBUG  Client handle is %d long\n", client_handle_length);
 
 	while (1) {
 		long message_length = strlen(message);
@@ -84,9 +98,8 @@ int main(int argc, char const *argv[]) {
 		
 	}
 
-
 	// Free the dynamic allocated memory we used
-	free(servinfo);
+	free(servinfo); // freeaddrinfo() ??
 
 	return 0;
 }

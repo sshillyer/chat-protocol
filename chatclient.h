@@ -32,6 +32,7 @@
 // Constants
 #define MIN_PORT_NUMBER 1
 #define MAX_PORT_NUMBER 65535
+#define BUF_HANDLE 12
 #define BUF_SIZE 513
 #define BUF_MSG 500
 // 500 MESSAGE + 10 handle + 1 prompt + 1 space  + 1 null term
@@ -93,7 +94,8 @@ void validate_port(int port, int err) {
 		|| (port > MAX_PORT_NUMBER || port < MIN_PORT_NUMBER)) 
 	{
 		// perror_exit("strtol", EXIT_FAILURE);
-		perror("strtol");
+		fprintf(stderr, "strtol() cannot convert port, invalid format or out of range\n");
+		// fprintf(stderr, "%s", message);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -108,6 +110,38 @@ void strip_newline_from_string(char * string) {
 	the list of characters in the second argument. So this gives us the end
 	and we place a null at that location in the string. */
 	string[strcspn(string, "\r\n")] = 0; // replace LF, CR, CRLF< LFCR with null
+}
+
+
+
+/*******************************************************************************
+* char * read_string_from_user(int max_len) {
+* 
+*******************************************************************************/
+char * read_string_from_user(int max_len) {
+	char * string; 
+	string = malloc(sizeof(char) * max_len);
+
+
+	// read input, trim off the \n replacing with a null
+	fgets(string, max_len, stdin);
+	string[strlen(string)-1] = '\0';
+	printf("DEBUG: strlen(string) is: %u\n", strlen(string));
+
+	return string;
+}
+
+/*******************************************************************************
+* char * prompt_user_for_handle()
+* 
+*******************************************************************************/
+char * prompt_user_for_handle() {
+	char * handle;
+	printf("Type in a handle, %d characters or less (extra truncated).\n", BUF_HANDLE - 2);
+	printf("Press [enter] when done.\n");
+	printf("Your handle?> ");
+	handle = read_string_from_user(BUF_HANDLE);
+	return handle;
 }
 
 
