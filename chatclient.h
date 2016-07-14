@@ -112,6 +112,28 @@ void strip_newline_from_string(char * string) {
 }
 
 
+/*******************************************************************************
+* build_payload()
+* 
+*******************************************************************************/
+char * build_payload(const char * handle, char * message) {
+	int handle_len = strlen(handle);
+	int message_len = strlen(message);
+	char * payload = malloc(sizeof(char) * (handle_len + message_len) );
+	int i, j;
+	for (i = 0; i < handle_len; i++) {
+		payload[i] = handle[i];
+	}
+	payload[i++] = '>';
+	payload[i++] = ' ';
+
+	for (j = 0; j < message_len; j++ ) {
+		payload[i++] = message[j];
+	}
+	payload[i] = '\0';
+
+	return payload;
+}
 
 /*******************************************************************************
 * char * read_string_from_user(int max_len) {
@@ -121,16 +143,15 @@ char * read_string_from_user(int max_len) {
 	char * string; 
 	string = malloc(sizeof(char) * max_len + 2); // extra space for \0 and \n
 
-
 	// read input, trim off the \n replacing with a null
 	fgets(string, max_len, stdin);
+	string[strlen(string)-1] = '\0';
+// >> DELETE THIS TRASH
 	// printf("DEBUG: strlen(string) is: %u\n", strlen(string));
-
 	// Flush the rest of the buffer?? 
 	//( Not working as intended, user has to press enter twice after every input)
 	// while(fgetc(stdin) != '\n');
-	
-	string[strlen(string)-1] = '\0';
+// << END TRASH DELETE HERE
 	return string;
 }
 
