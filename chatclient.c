@@ -32,8 +32,9 @@
 *******************************************************************************/
 int main(int argc, char const *argv[]) {
 	// allocate space to hold messages and various strings
-	char message[BUF_SIZE];
-	char resp[BUF_SIZE]; // might not really need this but it's "safer"
+	char * message;
+	char * resp; // might not really need this but it's "safer"
+	char * payload;
 	const char * port_str = argv[2]; // the port as a string. TODO:  convert this from the port variable using int to string method?
 	const char * hostname = argv[1]; // ex: localhost
 	const char * client_handle;
@@ -77,29 +78,47 @@ int main(int argc, char const *argv[]) {
 	// Connect to server indicated by servinfo.ai_addr
 	if(connect(sfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
 		fprintf(stderr, "chatclient: Could not contact chatserver process at %s:%d\n", hostname, port);
-		exit(2);
+		// exit(2);  // TODO: UNCOMMENT THIS!!
 	}
 
 
 	// Prompt user for a handle. Truncates anything in excess of 10 characters, strips newline
 	client_handle = prompt_user_for_handle();
-	int client_handle_length = strlen(client_handle);
+	// int client_handle_length = strlen(client_handle);
 	// printf("%s>", client_handle);
 	// printf("\nDEBUG  Client handle is %d long\n", client_handle_length);
 
-	while (1) {
+
+	// Main loop. Read message, send, listen for response.
+	int again = 1; // "true"
+	while (again) {
+		// Print prompt and read user input
+		printf("%s> ", client_handle);
+		
+		// Flush the rest of the buffer?? Only necessary if user inputs more than 
+		// the size we allow for the handle or message. But no portable way to do this.
+		// Consider this a TODO *IF TIME* problem; only downside is we send excess 
+		// stdin buffer to the server as a message. Not great :(
+		message = read_string_from_user(BUF_MSG);
+		printf("DEBUG: ECHO MESSAGE: '%s'\nLength: %d", message, (int)strlen(message));
+
 		long message_length = strlen(message);
 
 		// Send Message
-		safe_transmit_msg_on_socket(sfd, message, message_length, 2);
+		// safe_transmit_msg_on_socket(sfd, message, message_length, 2);
 
 		// Receive response from the server and print to screen.
-		safe_transmit_msg_on_socket(sfd, resp, message_length, 1);
+		// safe_transmit_msg_on_socket(sfd, resp, message_length, 1);
 		
+		// Free dynamic memory before looping again
+		if (message)
+			free(message);
 	}
 
 	// Free the dynamic allocated memory we used
-	free(servinfo); // freeaddrinfo() ??
+	if (servinfo) 
+		free(servinfo); // freeaddrinfo() ??
+
 
 	return 0;
 }

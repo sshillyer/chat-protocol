@@ -35,8 +35,7 @@
 #define BUF_HANDLE 12
 #define BUF_SIZE 513
 #define BUF_MSG 500
-// 500 MESSAGE + 10 handle + 1 prompt + 1 space  + 1 null term
-
+// 500 MESSAGE + 10 handle + 1 prompt + 1 for space  + 1 null term
 
 /*******************************************************************************
 * void check_argument_count(int arg_c, int req, const char * message)
@@ -120,14 +119,18 @@ void strip_newline_from_string(char * string) {
 *******************************************************************************/
 char * read_string_from_user(int max_len) {
 	char * string; 
-	string = malloc(sizeof(char) * max_len);
+	string = malloc(sizeof(char) * max_len + 2); // extra space for \0 and \n
 
 
 	// read input, trim off the \n replacing with a null
 	fgets(string, max_len, stdin);
-	string[strlen(string)-1] = '\0';
-	printf("DEBUG: strlen(string) is: %u\n", strlen(string));
+	// printf("DEBUG: strlen(string) is: %u\n", strlen(string));
 
+	// Flush the rest of the buffer?? 
+	//( Not working as intended, user has to press enter twice after every input)
+	// while(fgetc(stdin) != '\n');
+	
+	string[strlen(string)-1] = '\0';
 	return string;
 }
 
@@ -138,7 +141,7 @@ char * read_string_from_user(int max_len) {
 char * prompt_user_for_handle() {
 	char * handle;
 	printf("Type in a handle, %d characters or less (extra truncated).\n", BUF_HANDLE - 2);
-	printf("Press [enter] when done.\n");
+	printf("Press [enter] when done. (Excess characters in stdin buffer are sent as first message (BUG)\n");
 	printf("Your handle?> ");
 	handle = read_string_from_user(BUF_HANDLE);
 	return handle;
