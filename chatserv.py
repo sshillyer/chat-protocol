@@ -30,18 +30,36 @@ serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
 
-print('The server is ready to receive')
+print('Server is listening on port ' + str(serverPort))
+
+# Main server loop: listen for incoming connection
 while 1:
 	connectionSocket, addr = serverSocket.accept()
-	while 1:
+	again = True
+
+	# Once connected, exchange messages until quit message received
+	while again:
 		userInput = ''
-		message = ''
+		message = ''  # TODO: try deleting this line, prob superflous
 		message = connectionSocket.recv(513)
-		print(message.decode())
-		#userInput = "Hi from chaserv.py"
-		userInput = input(serverHandle + "> ")
-		userInput.rstrip('\n')
-		response = serverHandle + "> " + userInput 
-		print("Response will be: " + response)
-		connectionSocket.sendall(response.encode())
-	# connectionSocket.close()
+		message = message.decode()
+
+		if message == "\quit":
+			again = False
+			print("Peer has requested disconnect.\nServer is listening for more connections.")
+			break
+		else:
+			print(message)
+			userInput = input(serverHandle + "> ")
+			userInput.rstrip('\n')
+			if userInput != "\quit":
+				response = serverHandle + "> " + userInput
+			else:
+				response = userInput
+			connectionSocket.sendall(response.encode())
+			if userInput == '\quit':
+				print("Sent \quit command, disconnected from client.\nServer is listening for more connections.")
+				break
+
+	# Once done exchanging messages, close the socket
+	connectionSocket.close()

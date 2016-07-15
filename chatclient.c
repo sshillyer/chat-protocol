@@ -38,7 +38,6 @@ int main(int argc, char const *argv[]) {
 	const char * port_str = argv[2]; // the port as a string. TODO:  convert this from the port variable using int to string method?
 	const char * hostname = argv[1]; // ex: localhost
 	const char * client_handle;
-	int message_length;
 
 	// Verify Arguments are valid
 	check_argument_count(argc, 3, "Usage: chatclient hostname port\n");
@@ -84,44 +83,25 @@ int main(int argc, char const *argv[]) {
 
 	// Prompt user for a handle. Truncates anything in excess of 10 characters, strips newline
 	client_handle = prompt_user_for_handle();
-	// int client_handle_length = strlen(client_handle);
-	// printf("%s>", client_handle);
-	// printf("\nDEBUG  Client handle is %d long\n", client_handle_length);
 
 
 	// Main loop. Read message, send, listen for response.
 	int again = 1; // "true"
 	while (again) {
 		// Print prompt and read user input
-		printf("\n%s> ", client_handle);
-		
-		// read_string_from_user can leave stdin if user excees argument length, not sure how to fix
+		printf("%s> ", client_handle);
 		message = read_string_from_user(BUF_MSG);
-		// printf("DEBUG: ECHO MESSAGE: '%s'\nLength: %d", message, (int)strlen(message));
 
 		// If user's "message" is the '\quit' command, send the message as-is, then exit
 		if (strcmp(message, "\\quit") == 0) {
-			message_length = strlen(message);
-			strncpy(payload, message, message_length);
-			
-			// printf("DEBUG: message_length == %d", message_length);
-			
-			// TODO: send payload for \quit  case
-
+			safe_transmit_msg_on_socket(sfd, message, strlen(message), 2);
 			again = 0; // instead of these two lines, could just 'break'
-			continue;
+			break;
 		}
 		// otherwise send the message
 		else {
-			message_length = strlen(message) + strlen(client_handle) + strlen("> ");
 			payload = build_payload(client_handle, message);
-			
-			// printf("DEBUG: message_length == %d", message_length);
-			// printf("TODO: Send message with prompt: '%s'\n", payload);
-			// send payload
-
 			safe_transmit_msg_on_socket(sfd, payload, strlen(payload), 2);
-
 		}
 
 		// response is freed before the "chat loop" ends; not doing causes excess left in string
@@ -135,19 +115,19 @@ int main(int argc, char const *argv[]) {
 		int bytes_transmitted = read(sfd, response, BUF_SIZE);
 		if (bytes_transmitted == -1) {
 			perror("read");
-			// exit(EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 		
-		if (strcmp(message, "\\quit") == 0) {
+		// If other host sends \quit message, break out and exit chatclient
+		if (strcmp(response, "\\quit") == 0) {
 			printf("Server host has terminated session with \\quit command.\n");
-			again = 0;
-			continue;
+			break;
 		}
 		// Otherwise just print the response.
 		else {
-			// if(response) {
-				printf("\n%s", response);
-			// }
+			if(strlen(response) > 0) {
+				printf("%s\n", response);
+			}
 		}
 
 		// Free dynamic memory before looping again
@@ -169,7 +149,6 @@ int main(int argc, char const *argv[]) {
 	// Free the dynamic allocated memory we used
 	if (servinfo) 
 		free(servinfo); // freeaddrinfo() ??
-
-
 	return 0;
+
 }
