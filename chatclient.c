@@ -33,7 +33,7 @@
 int main(int argc, char const *argv[]) {
 	// allocate space to hold messages and various strings
 	char * message;
-	char * response = malloc(sizeof(char) * BUF_MSG); // might not really need this but it's "safer"
+	char * response;
 	char * payload;
 	const char * port_str = argv[2]; // the port as a string. TODO:  convert this from the port variable using int to string method?
 	const char * hostname = argv[1]; // ex: localhost
@@ -124,6 +124,13 @@ int main(int argc, char const *argv[]) {
 
 		}
 
+		// response is freed before the "chat loop" ends; not doing causes excess left in string
+		response = malloc(sizeof(char) * BUF_MSG);
+		int z;
+		for (z = 0; z < BUF_MSG; z++) {
+			response[z] = '\0';
+		}
+
 		// Receive response from server, print to screen if response not '\quit'
 		int bytes_transmitted = read(sfd, response, BUF_SIZE);
 		if (bytes_transmitted == -1) {
@@ -144,18 +151,19 @@ int main(int argc, char const *argv[]) {
 		}
 
 		// Free dynamic memory before looping again
-		// if (message) {
-		// 	free(message);
-			// message = NULL;
-		// }
-		// if (response) {
-		// 	free(response);
-			// response = NULL;
-		// }
-		// if (payload) {
-		// 	free(payload);
-			// payload = NULL;
-		// }
+		if (message) {
+			free(message);
+			message = NULL;
+		}
+		if (response) {
+			memset(&response[0], 0, sizeof(response)); // just in case the array had values from before
+			free(response);
+			response = NULL;
+		}
+		if (payload) {
+			free(payload);
+			payload = NULL;
+		}
 	}
 
 	// Free the dynamic allocated memory we used

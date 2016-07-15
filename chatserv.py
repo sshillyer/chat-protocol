@@ -22,8 +22,9 @@
 ################################################################################
 
 from socket import *
+import sys
 
-serverPort = 9000 # how to import from command line?
+serverPort = int(str(sys.argv[1])) # how to import from command line?
 serverHandle = "Host A"
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(('', serverPort))
@@ -33,9 +34,14 @@ print('The server is ready to receive')
 while 1:
 	connectionSocket, addr = serverSocket.accept()
 	while 1:
+		userInput = ''
+		message = ''
 		message = connectionSocket.recv(513)
 		print(message.decode())
-		userInput = "Hi from chaserv.py"
+		#userInput = "Hi from chaserv.py"
+		userInput = input(serverHandle + "> ")
+		userInput.rstrip('\n')
 		response = serverHandle + "> " + userInput 
+		print("Response will be: " + response)
 		connectionSocket.sendall(response.encode())
 	# connectionSocket.close()

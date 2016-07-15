@@ -120,6 +120,7 @@ char * build_payload(const char * handle, char * message) {
 	int handle_len = strlen(handle);
 	int message_len = strlen(message);
 	char * payload = malloc(sizeof(char) * (handle_len + message_len) );
+	memset(&payload[0], 0, sizeof(payload));
 	int i, j;
 	for (i = 0; i < handle_len; i++) {
 		payload[i] = handle[i];
@@ -142,6 +143,7 @@ char * build_payload(const char * handle, char * message) {
 char * read_string_from_user(int max_len) {
 	char * string; 
 	string = malloc(sizeof(char) * max_len + 2); // extra space for \0 and \n
+	memset(&string[0], 0, sizeof(string));
 
 	// read input, trim off the \n replacing with a null
 	fgets(string, max_len, stdin);
