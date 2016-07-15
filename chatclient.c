@@ -33,7 +33,7 @@
 int main(int argc, char const *argv[]) {
 	// allocate space to hold messages and various strings
 	char * message;
-	char * resp; // might not really need this but it's "safer"
+	char * response = malloc(sizeof(char) * BUF_MSG); // might not really need this but it's "safer"
 	char * payload;
 	const char * port_str = argv[2]; // the port as a string. TODO:  convert this from the port variable using int to string method?
 	const char * hostname = argv[1]; // ex: localhost
@@ -78,7 +78,7 @@ int main(int argc, char const *argv[]) {
 	// Connect to server indicated by servinfo.ai_addr
 	if(connect(sfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
 		fprintf(stderr, "chatclient: Could not contact chatserver process at %s:%d\n", hostname, port);
-		// exit(2);  // TODO: UNCOMMENT THIS!!
+		exit(2);  // TODO: UNCOMMENT THIS IF COMMENTED!!
 	}
 
 
@@ -93,7 +93,7 @@ int main(int argc, char const *argv[]) {
 	int again = 1; // "true"
 	while (again) {
 		// Print prompt and read user input
-		printf("%s> ", client_handle);
+		printf("\n%s> ", client_handle);
 		
 		// read_string_from_user can leave stdin if user excees argument length, not sure how to fix
 		message = read_string_from_user(BUF_MSG);
@@ -110,27 +110,52 @@ int main(int argc, char const *argv[]) {
 
 			again = 0; // instead of these two lines, could just 'break'
 			continue;
-		} 
+		}
+		// otherwise send the message
 		else {
 			message_length = strlen(message) + strlen(client_handle) + strlen("> ");
 			payload = build_payload(client_handle, message);
 			
 			// printf("DEBUG: message_length == %d", message_length);
-			
-			
 			// printf("TODO: Send message with prompt: '%s'\n", payload);
 			// send payload
 
-			// safe_transmit_msg_on_socket(sfd, message, message_length, 2);
+			safe_transmit_msg_on_socket(sfd, payload, strlen(payload), 2);
 
-			// Receive response from the server and print to screen.
-			// safe_transmit_msg_on_socket(sfd, resp, message_length, 1);
 		}
 
+		// Receive response from server, print to screen if response not '\quit'
+		int bytes_transmitted = read(sfd, response, BUF_SIZE);
+		if (bytes_transmitted == -1) {
+			perror("read");
+			// exit(EXIT_FAILURE);
+		}
+		
+		if (strcmp(message, "\\quit") == 0) {
+			printf("Server host has terminated session with \\quit command.\n");
+			again = 0;
+			continue;
+		}
+		// Otherwise just print the response.
+		else {
+			// if(response) {
+				printf("\n%s", response);
+			// }
+		}
 
 		// Free dynamic memory before looping again
-		if (message)
-			free(message);
+		// if (message) {
+		// 	free(message);
+			// message = NULL;
+		// }
+		// if (response) {
+		// 	free(response);
+			// response = NULL;
+		// }
+		// if (payload) {
+		// 	free(payload);
+			// payload = NULL;
+		// }
 	}
 
 	// Free the dynamic allocated memory we used
