@@ -35,8 +35,8 @@ int main(int argc, char const *argv[]) {
 	char * message;
 	char * response;
 	char * payload;
-	const char * port_str = argv[2]; // the port as a string. TODO:  convert this from the port variable using int to string method?
 	const char * hostname = argv[1]; // ex: localhost
+	const char * port_str = argv[2]; // the port as a string. TODO:  convert this from the port variable using int to string method?
 	const char * client_handle;
 
 	// Verify Arguments are valid

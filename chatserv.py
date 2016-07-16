@@ -24,7 +24,7 @@
 from socket import *
 import sys
 
-serverPort = int(str(sys.argv[1])) # how to import from command line?
+serverPort = int(str(sys.argv[1]))
 serverHandle = "Host A"
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(('', serverPort))
