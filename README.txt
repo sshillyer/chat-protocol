@@ -78,5 +78,5 @@ NOTE: If chatserv.py indicates port is unavailable, choose another before
    types '\quit' as the message. This will send the \quit command to the peer
    then close the connection.
 9) chatserv will continue to listen for new connections after the \quit command
-   is sent or received using the same port. To terminate chatserv, send a SIG_INT
+   is sent or received using the same port. To terminate chatserv, send a SIGINT
    signal (Ctrl-C by default)
