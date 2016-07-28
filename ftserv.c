@@ -28,9 +28,13 @@ int main(int argc, char const *argv[]) {
 	char * message;
 	char * response;
 	char * payload;
-	const char * hostname = argv[1]; // ex: localhost
-	const char * port_str = argv[2];
+	const char * port_str = argv[1];
 	const char * client_handle;
+	char s[INET6_ADDRSTRLEN]; // used to store the connecting host
+
+	// Other variables used - see page 23 beej
+	socklen_t addr_size; 
+	struct sockaddr_storage client_addr;
 
 	// Verify Arguments are valid, print error message if not
 	check_argument_count(argc, 2, "Usage: ftserv port\n");
@@ -42,8 +46,8 @@ int main(int argc, char const *argv[]) {
 
 
 	// Variables for sockets and the server address (See page 16 of beej guide)
-	int sfd, status; 
-	struct addrinfo hints, *servinfo;
+	int sfd, control_sfd, data_sfd, status; 
+	struct addrinfo hints, *servinfo, *clientinfo;
 	
 	
 	// 0 out hints struct then init to connect to hostname via TCP
@@ -55,7 +59,7 @@ int main(int argc, char const *argv[]) {
 	hints.ai_flags = AI_PASSIVE; // fill in localhost ip
 
 	// populate servinfo using the hints struct (Cite beej pg. 17 sample)
-	if ( (status = getaddrinfo(hostname, port_str, &hints, &servinfo)) != 0) {
+	if ( (status = getaddrinfo(NULL, port_str, &hints, &servinfo)) != 0) {
 		perror_exit("getaddrinfo", EXIT_FAILURE);
 	}
 
@@ -68,18 +72,94 @@ int main(int argc, char const *argv[]) {
 	}
 
 
-	// Next, bind socket (sfd) to a port
-
-/*
-	// Connect to server indicated by servinfo.ai_addr
-	if(connect(sfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-		fprintf(stderr, "ftserv: Could not contact chatserver process at %s:%d\n", hostname, port);
-		exit(2);  // TODO: UNCOMMENT THIS IF COMMENTED!!
+	// Next, bind socket (sfd) to a port (See beej page 20)
+	if (bind(sfd, servinfo->ai_addr, servinfo->ai_addrlen) == 01) {
+		perror_exit("bind", EXIT_FAILURE);
 	}
-*/
 
-	// Prompt user for a handle. Truncates anything in excess of 10 characters, strips newline
-	client_handle = prompt_user_for_handle();
+	
+	
+	printf("Server open on %d\n", port);
+
+	// Inspired by beej guide page 29)
+	while(1) {
+		// Listen for connections (Beej's guide 22-23)
+		if (listen(sfd, 5) == -1) {
+			perror_exit("listen", EXIT_FAILURE);
+		}
+
+		// Accept the connection
+		addr_size = sizeof client_addr;
+		if (control_sfd = accept(sockfd, (struct sockaddr *)&client_addr, &addr_size) == -1) {
+			perror_exit("accept", EXIT_FAILURE);
+		}
+	
+
+		// Figure out who connected and print it to screen (should be stored in )
+		// populate servinfo using the hints struct (Cite beej pg. 15-26 sample)
+
+// THIS BLOCK FROM PAGE 79 - LETTER FOR LETTER
+socklen_t len;
+struct sockaddr_storage addr;
+char ipstr[INET6_ADDRSTRLEN];
+int data_port; 
+len = sizeof addr;
+getpeername(control_sfd, (struct sockaddr*)&addr, &len);
+
+// deal with both IPv4 and IPv6:
+if (addr.ss_family == AF_INET) {
+	struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+	data_port = ntohs(control_sfd->sin_port);
+	inet_ntop(AF_INET, &control_sfd->sin_addr, ipstr, sizeof ipstr);
+} 
+else { // AF_INET6
+	struct sockaddr_in6 *control_sfd = (struct sockaddr_in6 *)&addr;
+	data_port = ntohs(control_sfd->sin6_port);
+	inet_ntop(AF_INET6, &control_sfd->sin6_addr, ipstr, sizeof ipstr);
+}
+//printf("Peer IP address: %s\n", ipstr);
+//printf("Peer port : %d\n", data_port);
+// END RIP
+
+
+		printf("Connection from %s\n", ipstr);
+
+		// Parse the incoming command
+
+		// if command is not valid, send error message on control_sfd to client, close open socket P, continue while()
+
+		// get/open a second connection, assign it to data_sfd, connecting back to clients ip and using <dataport> (which it sent over)
+
+		// if client sent -l command, send dir() listing to client
+		if(commandIsList) {
+			printf("List directory requested on port %d\n", data_port);
+			// send the info!
+		}
+
+		// if client sent -g <FILENAME>
+		if(commandisGet) {
+			printf("File \"%s\" requested on port %d\n", file_name, data_port);
+
+			// validate filename then send file if it exists
+
+			// If error opening/finding file, close connection Q (data_sfd) and send error message on connection P (control_sfd)
+
+			// else send the file
+		}
+		
+		// Close the data_sfd connection
+
+		// close the control_sfd connection
+				
+
+		
+		
+	}
+
+
+
+
+
 
 
 	// Main loop. Read message, send, listen for response.
